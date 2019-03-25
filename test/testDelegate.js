@@ -40,7 +40,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 	});
 
-	it("should test sendTxn with parameters", async () => {
+	it("should test sendTxn with one parameter", async () => {
 	    
 		let hello = await HelloWorld.deployed()
 		let gasDelegator = await GasDelegator.deployed()
@@ -51,6 +51,36 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 		// Step 1 - User creates builds and signs a packet
 		let packet = buildPacketWithParams('echo(string)', ['string'], ['jsd flk jsdf jlsksdfj!!'], {
+			user: accountUser,
+			target: hello.address,
+			origin: user,
+			paymentTokens: 500
+		})
+		
+		// Step 2 - relayer receives packet and transmits to contract
+		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address})
+
+		console.log('balances: ', (await token.balanceOf(user)).toString(), (await token.balanceOf(relayer)).toString()  )
+		console.log('allowance: ', (await gasDelegator.allowance(user)).toString() )
+
+	});
+
+	//string memory _input, uint _numberValue, bool _boolValue, bytes32 _hash
+
+	it("should test sendTxn with multiple parameters", async () => {
+	    
+		let hello = await HelloWorld.deployed()
+		let gasDelegator = await GasDelegator.deployed()
+		let token = await FixedSupplyToken.deployed()
+
+		console.log('balances: ', (await token.balanceOf(user)).toString(), (await token.balanceOf(relayer)).toString()  )
+		console.log('allowance: ', (await gasDelegator.allowance(user)).toString() )
+
+		// Step 1 - User creates builds and signs a packet
+		let packet = buildPacketWithParams('echo2(string,uint256,bool,bytes32)', 
+												['string','uint256','bool','bytes32'], 
+												['jsd flk jsdf jlsksdfj!!', 42, true, '0x36065761ed3a46bad7de1922f29a37ba298b5db35447153e7ebb0979381e3442'], 
+		{
 			user: accountUser,
 			target: hello.address,
 			origin: user,
