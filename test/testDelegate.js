@@ -31,7 +31,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		})
 
 		// Step 2 - relayer receives packet and transmits to contract
-		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address})
+		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address, gas: 150000})
 
 		console.log('balances: ', (await token.balanceOf(user)).toString(), (await token.balanceOf(relayer)).toString()  )
 		console.log('allowance: ', (await gasDelegator.allowance(user)).toString() )
@@ -55,7 +55,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		})
 		
 		// Step 2 - relayer receives packet and transmits to contract
-		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address})
+		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address, gas: 150000})
 
 		console.log('balances: ', (await token.balanceOf(user)).toString(), (await token.balanceOf(relayer)).toString()  )
 		console.log('allowance: ', (await gasDelegator.allowance(user)).toString() )
@@ -82,7 +82,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		})
 		
 		// Step 2 - relayer receives packet and transmits to contract
-		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address})
+		let res = await sendTxn(packet, {from: relayer, to: gasDelegator.address, gas: 150000})
 
 		console.log('balances: ', (await token.balanceOf(user)).toString(), (await token.balanceOf(relayer)).toString()  )
 		console.log('allowance: ', (await gasDelegator.allowance(user)).toString() )
@@ -186,7 +186,8 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		return await web3.eth.sendTransaction({
 		    from: metadata.from,
 		    to: metadata.to,
-		    data: newData
+		    data: newData,
+		    gas: metadata.gas
 		})
 	}
 
