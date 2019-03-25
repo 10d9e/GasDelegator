@@ -1,4 +1,3 @@
-var ethers = require('ethers')
 const Tx = require('ethereumjs-tx')
 
 var GasDelegator = artifacts.require("./GasDelegator.sol")
@@ -28,7 +27,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		let packet = buildPacket('render()', {
 			user: accountUser,
 			target: hello.address,
-			origin: user,
+			origin: accountUser.address,
 			paymentTokens: 500
 		})
 
@@ -53,7 +52,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		let packet = buildPacketWithParams('echo(string)', ['string'], ['jsd flk jsdf jlsksdfj!!'], {
 			user: accountUser,
 			target: hello.address,
-			origin: user,
+			origin: accountUser.address,
 			paymentTokens: 500
 		})
 		
@@ -83,7 +82,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		{
 			user: accountUser,
 			target: hello.address,
-			origin: user,
+			origin: accountUser.address,
 			paymentTokens: 500
 		})
 		
