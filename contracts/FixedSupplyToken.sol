@@ -34,9 +34,16 @@ contract FixedSupplyToken {
     }
 
     function transfer(address receiver, uint numTokens) public returns (bool) {
-        require(numTokens <= balances[msg.sender]);
+        require(numTokens <= balances[msg.sender], "Not enough tokens");
         balances[msg.sender] = balances[msg.sender].sub(numTokens);
         balances[receiver] = balances[receiver].add(numTokens);
+        emit Transfer(msg.sender, receiver, numTokens);
+        return true;
+    }
+
+    event Debug(uint numTokens, uint balance);
+    function transfer2(address receiver, uint numTokens) public returns (bool) {
+        emit Debug(numTokens, balances[msg.sender]);
         emit Transfer(msg.sender, receiver, numTokens);
         return true;
     }

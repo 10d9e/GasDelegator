@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "./BytesLib.sol";
-import "./ECDSA.sol";
 
 /**
  * @title ERC20 interface
@@ -27,11 +26,8 @@ interface IERC20 {
  */
 contract GasDelegator {
   using BytesLib for bytes;
-  using ECDSA for bytes32;
 
   IERC20 public token;
-
-  mapping (bytes32 => bool) transactions;
 
   constructor(address _token) public {
     token = IERC20(_token);
@@ -40,40 +36,30 @@ contract GasDelegator {
   function allowance(address who) external view returns (uint256) {
     return token.allowance(who, address(this));
   }
-  
+
   /**
   * @dev Fallback function allowing to perform a delegatecall to the given implementation.
   * This function will return whatever the implementation call returns
   */
   function() external {
-    bytes memory func = msg.data.slice(0, 4);
-    uint nonce = msg.data.toUint(4);
-    address targetAddress = msg.data.toAddress(36);
-    address originAddress = msg.data.toAddress(56);
-    uint tokenPayment = msg.data.toUint(76);
-    bytes memory signature = msg.data.slice(108, 65);
-    bytes memory params = msg.data.slice(173, msg.data.length - 173);
+    //bytes memory func = msg.data.slice(0, 4);
+    address target = msg.data.toAddress(4);
+    address relayer = msg.data.toAddress(24);
+    uint256 fee = msg.data.toUint(44);
 
-    bytes32 hashedTx;
-    if(params.length > 0) {
-      hashedTx = hashMetadata(func, nonce, targetAddress, originAddress, tokenPayment, params);
-    } else {
-      hashedTx = hashMetadata(func, nonce, targetAddress, originAddress, tokenPayment);
-    }
-    require(transactions[hashedTx] == false, "Transaction has already been submitted");
-    transactions[hashedTx] = true;
-    
-    address originUser = hashedTx.toEthSignedMessageHash().recover(signature);
-    require(originUser == originAddress, "Origin address does not match recovered signature address");
-    require(originUser != address(0), "Invalid address recovered from signature");
-    require(token.allowance(originAddress, address(this)) >= tokenPayment, "Not enough token allowance from origin user permitted to the GasDelegator contract, call ERC20.approve() to increase amount");
-    require(token.transferFrom(originAddress, msg.sender, tokenPayment) == true, "There was an error transfering tokens to sender");
+    //bytes memory params = msg.data.slice(74, msg.data.length - 74);
+    //bytes memory payload = func.concat(params);
+
+    require(token.allowance(msg.sender, address(this)) >= fee, "Not enough token allowance from origin user permitted to the GasDelegator contract, call ERC20.approve() to increase amount");
+    require(token.transferFrom(msg.sender, relayer, fee) == true, "There was an error transfering tokens to sender");
     
     assembly {
       let ptr := mload(0x40)
       calldatacopy(ptr, 0, 4)
-      calldatacopy(add(ptr,4), 173, sub(calldatasize, 173))
-      let result := delegatecall(gas, targetAddress, ptr, sub(calldatasize, 20), 0, 0)
+      calldatacopy(add(ptr, 4), 76, sub(calldatasize, 76))
+      let result := delegatecall(gas, target, ptr, sub(calldatasize, 72), 0, 0)
+      //let result := call(gas, target, 0, ptr, sub(calldatasize, 72), 0, 0) 
+      //let result := callcode(gas, target, 0, ptr, sub(calldatasize, 72), 0, 0) 
 
       let size := returndatasize
       returndatacopy(ptr, 0, size)
@@ -82,16 +68,6 @@ contract GasDelegator {
       case 0 { revert(ptr, size) }
       default { return(ptr, size) }
     }
-  }
-
-  function hashMetadata(bytes memory _func, uint _nonce, address _target, address _origin, uint _tokenPayment, bytes memory _params) 
-      public pure returns (bytes32) {
-      return keccak256(abi.encodePacked(_func, _nonce, _target, _origin, _tokenPayment, keccak256(_params)));
-  }
-
-  function hashMetadata(bytes memory _func, uint _nonce, address _target, address _origin, uint _tokenPayment) 
-      public pure returns (bytes32) {
-      return keccak256(abi.encodePacked(_func, _nonce, _target, _origin, _tokenPayment));
   }
 
 }
