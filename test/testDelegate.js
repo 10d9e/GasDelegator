@@ -62,8 +62,6 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 	});
 
-	//string memory _input, uint _numberValue, bool _boolValue, bytes32 _hash
-
 	it("should test sendTxn with multiple parameters", async () => {
 	    
 		let hello = await HelloWorld.deployed()
@@ -126,7 +124,8 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 	// no parameters
 	function buildPacket(funcDef, metadata) {
 		let func = web3.eth.abi.encodeFunctionSignature(funcDef)
-		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin.address, metadata.paymentTokens)
+		let nonce = web3.utils.randomHex(32)
+		var data = web3.utils.soliditySha3( func, nonce, metadata.target, metadata.origin.address, metadata.paymentTokens)
 		console.log('soliditySha3', data)
 
 		var sig = web3.eth.accounts.sign(data, metadata.origin.privateKey )
@@ -135,6 +134,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 		let packet = {
 			function: func,
+			nonce: nonce,
 			target: metadata.target,
 			origin: metadata.origin.address,
 			paymentTokens: encodedPaymentTokens,
@@ -147,12 +147,13 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 	function buildPacketWithParams(funcDef, paramTypes, paramValues, metadata) {
 		let func = web3.eth.abi.encodeFunctionSignature(funcDef)
+		let nonce = web3.utils.randomHex(32)
 		let params = web3.eth.abi.encodeParameters(paramTypes, paramValues).substring(2);
 		
 		let hParams = web3.utils.sha3( web3.utils.toHex( web3.eth.abi.encodeParameters(paramTypes, paramValues)) )
 		console.log('hParams', hParams)
 
-		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin.address, metadata.paymentTokens, hParams)
+		var data = web3.utils.soliditySha3( func, nonce, metadata.target, metadata.origin.address, metadata.paymentTokens, hParams)
 		console.log('soliditySha3', data)
 
 		var sig = web3.eth.accounts.sign(data, metadata.origin.privateKey )
@@ -161,6 +162,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 		let packet = {
 			function: func,
+			nonce: nonce,
 			target: metadata.target,
 			origin: metadata.origin.address,
 			paymentTokens: encodedPaymentTokens,
@@ -174,7 +176,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 	function packetToData(packet) {
 		let params = packet.params || ''
-		return packet.function + packet.target.substring(2) + packet.origin.substring(2) 
+		return packet.function + packet.nonce.substring(2) + packet.target.substring(2) + packet.origin.substring(2) 
 			   + packet.paymentTokens.substring(2) + packet.signature.substring(2) + params
 	}
 
