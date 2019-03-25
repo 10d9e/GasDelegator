@@ -43,8 +43,7 @@ contract GasDelegator {
   * @dev Fallback function allowing to perform a delegatecall to the given implementation.
   * This function will return whatever the implementation call returns
   */
-  function () external {
-
+  function() external {
     bytes memory func = msg.data.slice(0, 4);
     address targetAddress = msg.data.toAddress(4);
     address originAddress = msg.data.toAddress(24);
