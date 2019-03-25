@@ -42,13 +42,9 @@ contract GasDelegator {
   * This function will return whatever the implementation call returns
   */
   function() external {
-    //bytes memory func = msg.data.slice(0, 4);
     address target = msg.data.toAddress(4);
     address relayer = msg.data.toAddress(24);
     uint256 fee = msg.data.toUint(44);
-
-    //bytes memory params = msg.data.slice(74, msg.data.length - 74);
-    //bytes memory payload = func.concat(params);
 
     require(token.allowance(msg.sender, address(this)) >= fee, "Not enough token allowance from origin user permitted to the GasDelegator contract, call ERC20.approve() to increase amount");
     require(token.transferFrom(msg.sender, relayer, fee) == true, "There was an error transfering tokens to sender");
