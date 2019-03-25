@@ -25,9 +25,8 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 		// Step 1 - User creates builds and signs a packet
 		let packet = buildPacket('render()', {
-			user: accountUser,
 			target: hello.address,
-			origin: accountUser.address,
+			origin: accountUser,
 			paymentTokens: 500
 		})
 
@@ -50,9 +49,8 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 
 		// Step 1 - User creates builds and signs a packet
 		let packet = buildPacketWithParams('echo(string)', ['string'], ['jsd flk jsdf jlsksdfj!!'], {
-			user: accountUser,
 			target: hello.address,
-			origin: accountUser.address,
+			origin: accountUser,
 			paymentTokens: 500
 		})
 		
@@ -80,9 +78,8 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 												['string','uint256','bool','bytes32'], 
 												['jsd flk jsdf jlsksdfj!!', 42, true, '0x36065761ed3a46bad7de1922f29a37ba298b5db35447153e7ebb0979381e3442'], 
 		{
-			user: accountUser,
 			target: hello.address,
-			origin: accountUser.address,
+			origin: accountUser,
 			paymentTokens: 500
 		})
 		
@@ -129,17 +126,17 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 	// no parameters
 	function buildPacket(funcDef, metadata) {
 		let func = web3.eth.abi.encodeFunctionSignature(funcDef)
-		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin, metadata.paymentTokens)
+		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin.address, metadata.paymentTokens)
 		console.log('soliditySha3', data)
 
-		var sig = web3.eth.accounts.sign(data, metadata.user.privateKey )
+		var sig = web3.eth.accounts.sign(data, metadata.origin.privateKey )
 
 		let encodedPaymentTokens = web3.eth.abi.encodeParameter('uint256', metadata.paymentTokens)
 
 		let packet = {
 			function: func,
 			target: metadata.target,
-			origin: metadata.origin,
+			origin: metadata.origin.address,
 			paymentTokens: encodedPaymentTokens,
 			signature: sig.signature
 		}
@@ -155,17 +152,17 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 		let hParams = web3.utils.sha3( web3.utils.toHex( web3.eth.abi.encodeParameters(paramTypes, paramValues)) )
 		console.log('hParams', hParams)
 
-		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin, metadata.paymentTokens, hParams)
+		var data = web3.utils.soliditySha3( func, metadata.target, metadata.origin.address, metadata.paymentTokens, hParams)
 		console.log('soliditySha3', data)
 
-		var sig = web3.eth.accounts.sign(data, metadata.user.privateKey )
+		var sig = web3.eth.accounts.sign(data, metadata.origin.privateKey )
 
 		let encodedPaymentTokens = web3.eth.abi.encodeParameter('uint256', metadata.paymentTokens)
 
 		let packet = {
 			function: func,
 			target: metadata.target,
-			origin: metadata.origin,
+			origin: metadata.origin.address,
 			paymentTokens: encodedPaymentTokens,
 			signature: sig.signature,
 			params: params
@@ -176,7 +173,7 @@ contract('Delegate Tests [testDelegate.js]', async (accounts) => {
 	}
 
 	function packetToData(packet) {
-		let params = packet.params|| ''
+		let params = packet.params || ''
 		return packet.function + packet.target.substring(2) + packet.origin.substring(2) 
 			   + packet.paymentTokens.substring(2) + packet.signature.substring(2) + params
 	}
